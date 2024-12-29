@@ -254,6 +254,10 @@ AddPrefabPostInit("player_classified", function(inst)
             elseif mermkingmanager:HasKingAnywhere() then
                 -- 반대쪽(동굴 or 지상)으로 시그널 전달
                 SendModRPCToShard(GetShardModRPC(modname, "mermking_update"), nil, nil, nil, nil) 
+            else
+                inst.net_mermking_hunger_current:set(0) 
+                inst.net_mermking_hunger_max:set(TUNING.MERM_KING_HUNGER)
+                inst.net_mermking_health_current:set(0)
             end
         end
     end)
