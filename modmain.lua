@@ -5,7 +5,7 @@ local hungerbadge = nil
 local healthbadge = nil
 local king = nil
 local player_inst = nil
-local VISIBLEOPTION = GetModConfigData("VISIBLEOPTION")
+local MERM_ONLY = GetModConfigData("MERM_ONLY")
 
 Assets = {
     Asset("ANIM", "anim/mermking_hunger_meter.zip"),
@@ -66,8 +66,7 @@ AddClassPostConstruct("widgets/statusdisplays", function(self)
             self.max_hunger = GLOBAL.ThePlayer.player_classified.mermking_hunger_max
             self.current_health = GLOBAL.ThePlayer.player_classified.mermking_health_current
             
-            print(GLOBAL.ThePlayer.player_classified.equipped_hat)
-            if self.current_health > 0 and (not VISIBLEOPTION or GLOBAL.ThePlayer.prefab == "wurt" or GLOBAL.ThePlayer.player_classified.equipped_hat == "mermhat") then
+            if self.current_health > 0 and (not MERM_ONLY or GLOBAL.ThePlayer.prefab == "wurt" or GLOBAL.ThePlayer.player_classified.equipped_hat == "mermhat") then
                 self.healthbadge:Show()
                 self.hungerbadge:Show()
 
@@ -126,21 +125,21 @@ AddClassPostConstruct("widgets/statusdisplays", function(self)
                         end
                     end)
 
-                    -- 마우스 벗어남
-                    local _OnLoseFocus = self.hungerbadge.OnLoseFocus
-                    function self.hungerbadge:OnLoseFocus()
-                        _OnLoseFocus(self)
-                        self.rate:Hide()
-                    end
+                    -- -- 마우스 벗어남
+                    -- local _OnLoseFocus = self.hungerbadge.OnLoseFocus
+                    -- function self.hungerbadge:OnLoseFocus()
+                    --     _OnLoseFocus(self)
+                    --     self.rate:Hide()
+                    -- end
                     
-                    -- 마우스 들어옴
-                    local _OnGainFocus = self.hungerbadge.OnGainFocus
-                    function self.hungerbadge:OnGainFocus()
-                        _OnGainFocus(self)
-                        if self.active then
-                            self.rate:Show()
-                        end
-                    end
+                    -- -- 마우스 들어옴
+                    -- local _OnGainFocus = self.hungerbadge.OnGainFocus
+                    -- function self.hungerbadge:OnGainFocus()
+                    --     _OnGainFocus(self)
+                    --     if self.active then
+                    --         self.rate:Show()
+                    --     end
+                    -- end
                     
                     -- 배 위에 있을 때 뱃지 위치관련
                     -- function self.hungerbadge:OnHide()
