@@ -1,7 +1,7 @@
 name = "Mermking Status Badge(BETA)"
 description = "어인왕의 체력과 배고픔 수치를 보여줍니다. \n 어인왕이 동굴과 지상 양쪽에 모두 위치할 경우, 현재 플레이어가 위치하는 세계의 어인왕 정보만 표시됩니다. \n\n 옵션을 통해 어인왕의 수치를 볼 수 있는 캐릭터 범위를 조절할 수 있습니다."
 author = "ddings"
-version = "0.2.0"
+version = "0.2.1"
 forumthread = ""
 
 -- 인게임에서 보여지는 모드 아이콘 정보

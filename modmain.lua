@@ -69,7 +69,7 @@ AddClassPostConstruct("widgets/statusdisplays", function(self)
     self.last_health = 0
     self.current_health = 0
     self.health_regen = false
-    
+
     -- 매 프레임마다 반복하여 작업을 수행하는 entity 생성
     local entity = GLOBAL.CreateEntity()
     entity:DoPeriodicTask(0, function()
@@ -176,11 +176,10 @@ AddPrefabPostInit("player_classified", function(inst)
         inst.mermking_health_current = inst.net_mermking_health_current:value()
     end)
 
-    -- 프레임마다 mermkingmanager의 상태값으로 네트워크 변수를 갱신
-    inst:DoPeriodicTask(0, function()
-        local mermkingmanager = GLOBAL.TheWorld.components.mermkingmanager
-        if mermkingmanager ~= nil then
-            
+    -- 프레임 단위의 어인왕 상태체크 함수
+    local function StartPeriodicTask(mermkingmanager)
+        if inst.task ~= nil then return end 
+        inst.task = inst:DoPeriodicTask(0, function()
             -- 현재 플레이어 Shard와 어인왕의 Shard가 동일한 위치인지 확인하여 분기
             if mermkingmanager:HasKingLocal() then
                 local king = mermkingmanager:GetKing()
@@ -199,7 +198,33 @@ AddPrefabPostInit("player_classified", function(inst)
                 inst.net_mermking_health_regen:set(false)
                 inst.net_mermking_health_current:set(0)
             end
+        end)
+    end
+
+    -- 어인왕 사망 시, 상태체크 task 관리
+    local function StopPeriodicTask(mermkingmanager)
+        if inst.task == nil then return end 
+        if mermkingmanager == nil or not mermkingmanager:HasKingAnywhere() then
+            inst.net_mermking_hunger_max:set(TUNING.MERM_KING_HUNGER)
+            inst.net_mermking_hunger_current:set(0)
+            inst.net_mermking_health_regen:set(false)
+            inst.net_mermking_health_current:set(0)
+
+            inst.task:Cancel()
+            inst.task = nil
         end
+    end
+
+    inst.task = nil
+    if GLOBAL.TheWorld.components.mermkingmanager ~= nil then
+        StartPeriodicTask(GLOBAL.TheWorld.components.mermkingmanager)
+    end
+
+    GLOBAL.TheWorld:ListenForEvent("onmermkingcreated", function(inst, king, throne)
+        StartPeriodicTask(GLOBAL.TheWorld.components.mermkingmanager)
+    end)
+    GLOBAL.TheWorld:ListenForEvent("onmermkingdestroyed", function(inst, throne)
+        StopPeriodicTask(GLOBAL.TheWorld.components.mermkingmanager)
     end)
 end)
 
