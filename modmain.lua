@@ -6,6 +6,8 @@ local healthbadge = nil
 local player_inst = nil
 local MERM_ONLY = GetModConfigData("MERM_ONLY") -- modinfo.lua의 옵션 값
 
+local display
+
 -- 인게임 아이콘 표시를 위한 애니메이션 파일 추가
 Assets = {
     Asset("ANIM", "anim/mermking_hunger_meter.zip"),
@@ -70,72 +72,68 @@ AddClassPostConstruct("widgets/statusdisplays", function(self)
     self.current_health = 0
     self.health_regen = false
 
-    -- 매 프레임마다 반복하여 작업을 수행하는 entity 생성
-    local entity = GLOBAL.CreateEntity()
-    entity:DoPeriodicTask(0, function()
-        if GLOBAL.ThePlayer ~= nil then 
+    self.UpdateMermking = function()
+        self.max_hunger = GLOBAL.ThePlayer.player_classified.mermking_hunger_max
+        self.current_hunger = GLOBAL.ThePlayer.player_classified.mermking_hunger_current
+        self.health_regen = GLOBAL.ThePlayer.player_classified.mermking_health_regen
+        self.current_health = GLOBAL.ThePlayer.player_classified.mermking_health_current
 
-            -- 현재 프레임의 상태 값 반영
-            self.max_hunger = GLOBAL.ThePlayer.player_classified.mermking_hunger_max
-            self.current_hunger = GLOBAL.ThePlayer.player_classified.mermking_hunger_current
-            self.health_regen = GLOBAL.ThePlayer.player_classified.mermking_health_regen
-            self.current_health = GLOBAL.ThePlayer.player_classified.mermking_health_current
+        -- 뱃지 출력을 위한 조건 검증
+        if self.current_health > 0 and (not MERM_ONLY or GLOBAL.ThePlayer.prefab == "wurt" or GLOBAL.ThePlayer.player_classified.equipped_hat == "mermhat") then
+            self.healthbadge:Show()
+            self.hungerbadge:Show()
 
-            -- 뱃지 출력을 위한 조건 검증
-            if self.current_health > 0 and (not MERM_ONLY or GLOBAL.ThePlayer.prefab == "wurt" or GLOBAL.ThePlayer.player_classified.equipped_hat == "mermhat") then
-                self.healthbadge:Show()
-                self.hungerbadge:Show()
-
-                -- 뱃지 수치 갱신 및 효과 출력
-                self.hungerbadge:SetPercent(self.current_hunger, self.max_hunger)
-                self.hungerbadge:ArrowUpdate()
-                if self.last_hunger ~= nil and self.current_hunger ~= nil and self.current_hunger > self.last_hunger then
-                    hungerIncrease()
-                end
-
-
-                self.healthbadge:SetPercent(self.current_health, TUNING.MERM_KING_HEALTH)
-                self.healthbadge:ArrowUpdate(self.current_hunger == 0, self.current_health < TUNING.MERM_KING_HEALTH and self.health_regen)
-                if self.last_health ~= nil and self.current_health ~= nil and 
-                    self.current_health < self.last_health and self.current_hunger > 0 then
-                    healthDecrease()
-                end
-
-                -- combined status 모드에 따른 UI 수정
-                if HAS_MOD.COMBINED_STATUS then
-                    -- 뱃지 위치 및 크기 조정
-                    local Text = require("widgets/text")
-                    self.hungerbadge:SetPosition(-124, 35)
-                    self.hungerbadge.rate = self.hungerbadge:AddChild(Text(GLOBAL.NUMBERFONT, 28))
-                    self.hungerbadge.rate:SetPosition(2, -40.5, 0)
-                    self.hungerbadge.rate:SetScale(1,.78,1)
-                    self.hungerbadge.rate:Hide()
-
-                    self.healthbadge:SetPosition(-186, 35)
-                    self.healthbadge.rate = self.healthbadge:AddChild(Text(GLOBAL.NUMBERFONT, 28))
-                    self.healthbadge.rate:SetPosition(2, -40.5, 0)
-                    self.healthbadge.rate:SetScale(1,.78,1)
-                    self.healthbadge.rate:Hide()
-                else
-                    -- 뱃지 내 수치표현에 사용되는 텍스트 설정 수정
-                    self.hungerbadge.num:SetSize(25)
-                    self.hungerbadge.num:SetScale(1,.9,1)
-                    self.hungerbadge.num:SetPosition(3, 3)
-
-                    self.healthbadge.num:SetSize(25)
-                    self.healthbadge.num:SetScale(1,.9,1)
-                    self.healthbadge.num:SetPosition(3, 3)
-                end
-                
-                -- 다음 task에서 수치 증감을 확인하기 위해 현재 값 저장
-                self.last_hunger = self.current_hunger
-                self.last_health = self.current_health
-            else 
-                self.healthbadge:Hide()
-                self.hungerbadge:Hide()
+            -- 뱃지 수치 갱신 및 효과 출력
+            self.hungerbadge:SetPercent(self.current_hunger, self.max_hunger)
+            self.hungerbadge:ArrowUpdate()
+            if self.last_hunger ~= nil and self.current_hunger ~= nil and self.current_hunger > self.last_hunger then
+                hungerIncrease()
             end
+
+
+            self.healthbadge:SetPercent(self.current_health, TUNING.MERM_KING_HEALTH)
+            self.healthbadge:ArrowUpdate(self.current_hunger == 0, self.current_health < TUNING.MERM_KING_HEALTH and self.health_regen)
+            if self.last_health ~= nil and self.current_health ~= nil and 
+                self.current_health < self.last_health and self.current_hunger > 0 then
+                healthDecrease()
+            end
+
+            -- combined status 모드에 따른 UI 수정
+            if HAS_MOD.COMBINED_STATUS then
+                -- 뱃지 위치 및 크기 조정
+                local Text = require("widgets/text")
+                self.hungerbadge:SetPosition(-124, 35)
+                self.hungerbadge.rate = self.hungerbadge:AddChild(Text(GLOBAL.NUMBERFONT, 28))
+                self.hungerbadge.rate:SetPosition(2, -40.5, 0)
+                self.hungerbadge.rate:SetScale(1,.78,1)
+                self.hungerbadge.rate:Hide()
+
+                self.healthbadge:SetPosition(-186, 35)
+                self.healthbadge.rate = self.healthbadge:AddChild(Text(GLOBAL.NUMBERFONT, 28))
+                self.healthbadge.rate:SetPosition(2, -40.5, 0)
+                self.healthbadge.rate:SetScale(1,.78,1)
+                self.healthbadge.rate:Hide()
+            else
+                -- 뱃지 내 수치표현에 사용되는 텍스트 설정 수정
+                self.hungerbadge.num:SetSize(25)
+                self.hungerbadge.num:SetScale(1,.9,1)
+                self.hungerbadge.num:SetPosition(3, 3)
+
+                self.healthbadge.num:SetSize(25)
+                self.healthbadge.num:SetScale(1,.9,1)
+                self.healthbadge.num:SetPosition(3, 3)
+            end
+            
+            -- 다음 task에서 수치 증감을 확인하기 위해 현재 값 저장
+            self.last_hunger = self.current_hunger
+            self.last_health = self.current_health
+        else 
+            self.healthbadge:Hide()
+            self.hungerbadge:Hide()
         end
-    end)
+    end
+
+    display = self
 end)
 
 -- player_classified prefab 확장
@@ -155,26 +153,43 @@ AddPrefabPostInit("player_classified", function(inst)
     inst.mermking_hunger_max = TUNING.MERM_KING_HUNGER
     inst.net_mermking_hunger_max = GLOBAL.net_int(inst.GUID, "mermking_hunger_max", "mermking_hunger_max_dirty")
     inst:ListenForEvent("mermking_hunger_max_dirty", function(inst)
+        local prev_value = inst.mermking_hunger_max
         inst.mermking_hunger_max = inst.net_mermking_hunger_max:value()
+        if display ~= nil and prev_value ~= inst.mermking_hunger_max then
+            display:UpdateMermking()
+        end
     end)
 
     inst.mermking_hunger_current = 0
     inst.net_mermking_hunger_current = GLOBAL.net_float(inst.GUID, "mermking_hunger_current", "mermking_hunger_current_dirty")
     inst:ListenForEvent("mermking_hunger_current_dirty", function(inst)
+        local prev_value = inst.mermking_hunger_current
         inst.mermking_hunger_current = inst.net_mermking_hunger_current:value()
+        if display ~= nil and prev_value ~= inst.mermking_hunger_current then
+            display:UpdateMermking()
+        end
     end)
 
     inst.mermking_health_regen = false
     inst.net_mermking_health_regen = GLOBAL.net_bool(inst.GUID, "mermking_health_regen", "mermking_health_regen_dirty")
     inst:ListenForEvent("mermking_health_regen_dirty", function(inst)
+        local prev_value = inst.mermking_health_regen
         inst.mermking_health_regen = inst.net_mermking_health_regen:value()
+        if display ~= nil and prev_value ~= inst.mermking_health_regen then
+            display:UpdateMermking()
+        end
     end)
     
     inst.mermking_health_current = 0
     inst.net_mermking_health_current = GLOBAL.net_float(inst.GUID, "mermking_health_current", "mermking_health_current_dirty")
     inst:ListenForEvent("mermking_health_current_dirty", function(inst)
+        local prev_value = inst.mermking_health_current
         inst.mermking_health_current = inst.net_mermking_health_current:value()
+        if display ~= nil and prev_value ~= inst.mermking_health_current then
+            display:UpdateMermking()
+        end
     end)
+
 
     -- 프레임 단위의 어인왕 상태체크 함수
     local function StartPeriodicTask(mermkingmanager)
