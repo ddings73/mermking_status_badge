@@ -54,9 +54,12 @@ AddClassPostConstruct("widgets/statusdisplays", function(self)
     -- 뱃지 객체 생성 및 위치설정
 	self.hungerbadge = self:AddChild(MermKingHungerBadge(self.owner, HAS_MOD.COMBINED_STATUS))
 	self.hungerbadge:SetPosition(-120,20)
+    self.hungerbadge:Hide()
     
     self.healthbadge = self:AddChild(MermKingHealthBadge(self.owner, HAS_MOD.COMBINED_STATUS))
     self.healthbadge:SetPosition(-200,20)
+    self.healthbadge:Hide()
+    
 
     -- 외부에서 badge 객체에 접근하기 위해 상위 scope에 저장
     -- 설정하지 않으면, 이후 시점에서 접근 불가 
@@ -73,6 +76,10 @@ AddClassPostConstruct("widgets/statusdisplays", function(self)
     self.health_regen = false
 
     self.UpdateMermking = function()
+        
+        self.healthbadge:Hide()
+        self.hungerbadge:Hide()
+
         self.max_hunger = GLOBAL.ThePlayer.player_classified.mermking_hunger_max
         self.current_hunger = GLOBAL.ThePlayer.player_classified.mermking_hunger_current
         self.health_regen = GLOBAL.ThePlayer.player_classified.mermking_health_regen
@@ -127,9 +134,6 @@ AddClassPostConstruct("widgets/statusdisplays", function(self)
             -- 다음 task에서 수치 증감을 확인하기 위해 현재 값 저장
             self.last_hunger = self.current_hunger
             self.last_health = self.current_health
-        else 
-            self.healthbadge:Hide()
-            self.hungerbadge:Hide()
         end
     end
 
