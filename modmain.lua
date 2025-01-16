@@ -251,23 +251,26 @@ end)
 -- RPC 시그널을 생성한 Shard와 동일한지 확인하고, 상태값의 유무에 따라 수행할 동작 분기
 -- shardId는 RPC 요청을 생성한 Shard를 의미
 AddShardModRPCHandler(modname, "mermking_update", function(shardId, hunger_max, hunger_current, health_regen, health_current)
-    if GLOBAL.TheShard:GetShardId() ~= tostring(shardId) then
-        if hunger_max ~= nil and hunger_current ~= nil and health_regen ~= nil and health_current ~= nil then
-            player_inst.net_mermking_hunger_max:set(hunger_max)
-            player_inst.net_mermking_hunger_current:set(hunger_current)
-            player_inst.net_mermking_health_regen:set(health_regen)
-            player_inst.net_mermking_health_current:set(health_current)
-        else
-            local king = GLOBAL.TheWorld.components.mermkingmanager:GetKing()
-            GLOBAL.TheWorld:DoTaskInTime(0, function()
-                SendModRPCToShard(GetShardModRPC(modname, "mermking_update"), shardId, 
-                    king.components.hunger.max, 
-                    king.components.hunger.current, 
-                    king.components.health.regen ~= nil, 
-                    king.components.health.currenthealth
-                )
-            end) 
+    if hunger_max ~= nil and hunger_current ~= nil and health_current ~= nil then
+        player_inst.net_mermking_hunger_max:set(hunger_max)
+        player_inst.net_mermking_hunger_current:set(hunger_current)
+        player_inst.net_mermking_health_regen:set(health_regen ~= nil)
+        player_inst.net_mermking_health_current:set(health_current)
+    elseif GLOBAL.TheShard:GetShardId() ~= tostring(shardId) then
+        local king = GLOBAL.TheWorld.components.mermkingmanager:GetKing()
+        local local_hunger_max, local_hunger_current, local_health_regen, local_health_current 
+        if king ~= nil then
+           local_hunger_max = king.components.hunger.max
+           local_hunger_current = king.components.hunger.current
+           local_health_regen = king.components.health.regen
+           local_health_current = king.components.health.currenthealth
         end
+
+        GLOBAL.TheWorld:DoTaskInTime(0, function()
+            SendModRPCToShard(GetShardModRPC(modname, "mermking_update"), shardId, 
+                local_hunger_max, local_hunger_current, local_health_regen, local_health_current
+            )
+        end)
     end
 end)
 
