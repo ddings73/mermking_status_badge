@@ -209,7 +209,7 @@ AddPrefabPostInit("player_classified", function(inst)
             elseif mermkingmanager:HasKingAnywhere() then
                 -- 반대쪽 Shard(동굴 or 지상)로 시그널 전달
                 -- 두번째 인자가 nil인 경우, 연결된 모든 Shard로 요청을 전송
-                SendModRPCToShard(GetShardModRPC(modname, "mermking_update"), nil, nil, nil, nil, nil) 
+                SendModRPCToShard(GetShardModRPC(modname, "mermking_update"), nil, nil, nil, false, nil) 
             else
                 -- 어인왕이 존재하지 않을 경우, 기본값으로 초기화
                 inst.net_mermking_hunger_max:set(TUNING.MERM_KING_HUNGER)
@@ -262,12 +262,12 @@ AddShardModRPCHandler(modname, "mermking_update", function(shardId, hunger_max, 
         if king ~= nil then
            local_hunger_max = king.components.hunger.max
            local_hunger_current = king.components.hunger.current
-           local_health_regen = king.components.health.regen
+           local_health_regen = king.components.health.regen ~= nil
            local_health_current = king.components.health.currenthealth
         end
-
+        
         GLOBAL.TheWorld:DoTaskInTime(0, function()
-            SendModRPCToShard(GetShardModRPC(modname, "mermking_update"), shardId, 
+            SendModRPCToShard(GetShardModRPC(modname, "mermking_update"), tostring(shardId), 
                 local_hunger_max, local_hunger_current, local_health_regen, local_health_current
             )
         end)
